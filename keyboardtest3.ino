@@ -88,59 +88,43 @@ void pressModifiers(uint8_t modifiers) {
   else if (modifiers == 2) {
     Keyboard.press(KEY_LEFT_SHIFT);
   }
+  else if (modifiers == 4) {
+    Keyboard.press(KEY_LEFT_ALT);
+  }
+  else if (modifiers == 8) {
+    Keyboard.press(KEY_LEFT_GUI);
+  }
 }
 
 void mapKeycodeToString(uint8_t modifiers, uint8_t keycode) {
 
-
-  char mapArray[] = {
-    'NA', 'NA', 'NA', 'NA', 'a', 'b', 'c', 'd', 'e', 'f',
+  char charMapArray[] = {
+    'N', 'N', 'N', 'N', 'a', 'b', 'c', 'd', 'e', 'f',
     'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p',
     'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
     '1', '2', '3', '4', '5', '6', '7', '8', '9', '0',
-    'NA', 'NA', 'NA', 'NA', ' ', '-', '=', '[', ']', 'NA',
-    'NA', ';', '\'', 'NA', ',', '.', '/', 'NA', 'NA', 'NA',
-    'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA',
-    'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA',
-    'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA',
-    'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA',
-    'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA',
-    'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA',
-    'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA',
-    'NA', 'NA', 'NA', 'NA', 'NA', '`', 'NA', '\\', 'NA', 'NA',
-    'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA',
-    'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA'
+    KEY_RETURN, KEY_ESC, KEY_BACKSPACE, KEY_TAB, ' ', '-', '=', '[', ']', 'N',
+    'N', ';', '\'', 'N', ',', '.', '/', 'N', KEY_F1, KEY_F2,
+    KEY_F3, KEY_F4, KEY_F5, KEY_F6, KEY_F7, KEY_F8, KEY_F9, KEY_F10, KEY_F11, KEY_F12,
+    'N', 'N', 'N', KEY_INSERT, KEY_HOME, KEY_PAGE_UP, KEY_DELETE, KEY_END, KEY_PAGE_DOWN, KEY_RIGHT_ARROW,
+    KEY_LEFT_ARROW, KEY_DOWN_ARROW, KEY_UP_ARROW, 'N', 'N', 'N', 'N', 'N', 'N', 'N',
+    'N', 'N', 'N', 'N', 'N', 'N', 'N', 'N', 'N', 'N',
+    'N', 'N', 'N', 'N', 'N', 'N', 'N', 'N', 'N', 'N',
+    'N', 'N', 'N', 'N', 'N', 'N', 'N', 'N', 'N', 'N',
+    'N', 'N', 'N', 'N', 'N', 'N', 'N', 'N', 'N', 'N',
+    'N', 'N', 'N', 'N', 'N', '`', 'N', '\\', KEY_LEFT_SHIFT, 'N',
+    'N', 'N', 'N', 'N', 'N', 'N', 'N', 'N', 'N', 'N',
+    'N', 'N', 'N', 'N', 'N', 'N', 'N', 'N', 'N', 'N'
   };
 
-  if (keycode == 79) {
-    Keyboard.press(KEY_RIGHT_ARROW);
-  }
-  else if (keycode == 80) {
-    Keyboard.press(KEY_LEFT_ARROW);
-  }
-  else if (keycode == 81) {
-    Keyboard.press(KEY_DOWN_ARROW);
-  }
-  else if (keycode == 82) {
-    Keyboard.press(KEY_UP_ARROW);
-  }
-  else if (keycode == 42) {
-    Keyboard.press(KEY_BACKSPACE);
-  }
-  else if (keycode == 40) {
-    Keyboard.press(KEY_RETURN);
-  }
-  else if (keycode == 138) {
-    Keyboard.press(KEY_LEFT_ALT);
-  }
-  else if (keycode == 136) {
+  if (keycode == 136) {
     Keyboard.press(KEY_LEFT_ALT);
     Keyboard.press('`');
   }
   else if (keycode == 0) {
   }
   else {
-    Keyboard.press(mapArray[keycode]);
+    Keyboard.press(charMapArray[keycode]);
   }
 
   return;
@@ -155,19 +139,8 @@ void HIDKeyboardParser::Parse(USBHID *hid, bool is_rpt_id, uint8_t len, uint8_t 
   sendKeyCodesBySerial(buf[0], buf[2], buf[3], buf[4], buf[5], buf[6], buf[7]);
 }
 
-//boolean arrayContainsElement(uint8_t array[], uint8_t element) {
-//  for (int i = 0; i < 6; i++) {
-//    if (array[i] == element) {
-//      return true;
-//    }
-//  }
-//  return false;
-//}
-
-
 USB usb;
 HIDBoot<USB_HID_PROTOCOL_KEYBOARD> HidKeyboard(&usb);
-uint32_t next_time;
 HIDKeyboardParser parser;
 
 void setup()
@@ -176,7 +149,6 @@ void setup()
 
   usb.Init();
   delay(200);
-  next_time = millis() + 5000;
 
   HidKeyboard.SetReportParser(0, (HIDKeyboardParser*)&parser);
 }
