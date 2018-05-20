@@ -16,67 +16,63 @@ void initCacheArray() {
   }
 }
 
+void outputCacheArray() {
+  for (int i = 0; i < 256; i++) {
+    Serial.print(i, DEC);
+    Serial.println(keyCache[i] ? " true" : " false");
+  }
+}
+
 // キー送信のメイン処理
 void sendKeyCodesBySerial(uint8_t modifiers,
-                          uint8_t keycode0,
-                          uint8_t keycode1,
-                          uint8_t keycode2,
-                          uint8_t keycode3,
-                          uint8_t keycode4,
-                          uint8_t keycode5)
+                          uint8_t *keycodes)
 {
   //  Keyboard.print(0xFD); // Raw Report Mode
   //  Keyboard.print(0x09); // Length
   //  Keyboard.print(0x01); // Descriptor 0x01=Keyboard
   //
   //  /* send key codes(8 bytes all) */
-  //Keyboard.print(modifiers); // modifier keys
   //  Keyboard.print(0x00, 1);   // reserved
-  //Keyboard.print(keycode0);  // keycode0
+
+
   // デバッグ出力用
+  //outputCacheArray();
   Serial.print("modifiers:"); // modifier keys
   Serial.println(modifiers); // modifier keys
-  Serial.print("keycode0:");  // keycode
-  Serial.println(keycode0);  // keycode
-  Serial.print("keycode1:");  // keycode
-  Serial.println(keycode1);  // keycode
-  Serial.print("keycode2:");  // keycode
-  Serial.println(keycode2);  // keycode
+  for (int i = 0; i < 6; i++) {
+    Serial.print("keycode:");
+    Serial.println(keycodes[i]);
+  }
   Serial.println("");  // keycode
 
+
   // すべてのキーが離されたらキャッシュクリア
-  if (keycode0 == 0 && keycode1 == 0 && keycode2 == 0 && keycode3 == 0 && keycode4 == 0 && keycode5 == 0) {
+  if (keycodes[0] == 0 && keycodes[1] == 0 && keycodes[2] == 0 && keycodes[3] == 0 && keycodes[4] == 0 && keycodes[5] == 0) {
     initCacheArray();
     Keyboard.releaseAll();
     delay(5);
     return;
   }
 
-  // キャッシュがあったら入力をさせない
-  if (isKeyCached(keycode0)) keycode0 = 0;
-  if (isKeyCached(keycode1)) keycode1 = 0;
-  if (isKeyCached(keycode2)) keycode2 = 0;
-  if (isKeyCached(keycode3)) keycode3 = 0;
-  if (isKeyCached(keycode4)) keycode4 = 0;
-  if (isKeyCached(keycode5)) keycode5 = 0;
+  for (int i = 0; i < 6; i++) {
+    // キャッシュがあったら入力をさせない
+    if (isKeyCached(keycodes[i])) keycodes[i] = 0;
+    // 入力されたキー情報はキャッシュしておく
+    keyCache[keycodes[i]] = true;
+  }
 
-  // 入力されたキー情報はキャッシュしておく
-  keyCache[keycode0] = true;
-  keyCache[keycode1] = true;
-  keyCache[keycode2] = true;
-  keyCache[keycode3] = true;
-  keyCache[keycode4] = true;
-  keyCache[keycode5] = true;
+  if (keycodes[0] == 138 || keycodes[1] == 138 || keycodes[2] == 138 || keycodes[3] == 138 || keycodes[4] == 138 || keycodes[5] == 138) {
+    Serial.print("modifiers change"); // modifier keys
+    modifiers = 2;
+  }
 
   // 修飾キーの入力
   pressModifiers(modifiers);
   // 実際のキー入力
-  mapKeycodeToString(modifiers, keycode0);
-  mapKeycodeToString(modifiers, keycode1);
-  mapKeycodeToString(modifiers, keycode2);
-  mapKeycodeToString(modifiers, keycode3);
-  mapKeycodeToString(modifiers, keycode4);
-  mapKeycodeToString(modifiers, keycode5);
+  for (int i = 0; i < 6; i++) {
+    mapKeycodeToString(keycodes[i]);
+  }
+
   Keyboard.releaseAll();
   delay(5);
 }
@@ -96,7 +92,7 @@ void pressModifiers(uint8_t modifiers) {
   }
 }
 
-void mapKeycodeToString(uint8_t modifiers, uint8_t keycode) {
+void mapKeycodeToString(uint8_t keycode) {
 
   char charMapArray[] = {
     'N', 'N', 'N', 'N', 'a', 'b', 'c', 'd', 'e', 'f',
@@ -112,7 +108,7 @@ void mapKeycodeToString(uint8_t modifiers, uint8_t keycode) {
     'N', 'N', 'N', 'N', 'N', 'N', 'N', 'N', 'N', 'N',
     'N', 'N', 'N', 'N', 'N', 'N', 'N', 'N', 'N', 'N',
     'N', 'N', 'N', 'N', 'N', 'N', 'N', 'N', 'N', 'N',
-    'N', 'N', 'N', 'N', 'N', '`', 'N', '\\', KEY_LEFT_SHIFT, 'N',
+    'N', 'N', 'N', 'N', 'N', '`', 'N', '\\', 'N', 'N',
     'N', 'N', 'N', 'N', 'N', 'N', 'N', 'N', 'N', 'N',
     'N', 'N', 'N', 'N', 'N', 'N', 'N', 'N', 'N', 'N'
   };
@@ -121,7 +117,7 @@ void mapKeycodeToString(uint8_t modifiers, uint8_t keycode) {
     Keyboard.press(KEY_LEFT_ALT);
     Keyboard.press('`');
   }
-  else if (keycode == 0) {
+  else if (keycode == 0 || keycode == 138) {
   }
   else {
     Keyboard.press(charMapArray[keycode]);
@@ -136,7 +132,9 @@ class HIDKeyboardParser : public KeyboardReportParser
 };
 
 void HIDKeyboardParser::Parse(USBHID *hid, bool is_rpt_id, uint8_t len, uint8_t *buf) {
-  sendKeyCodesBySerial(buf[0], buf[2], buf[3], buf[4], buf[5], buf[6], buf[7]);
+  uint8_t modifier = buf[0];
+  uint8_t keycodes[6] = {buf[2], buf[3], buf[4], buf[5], buf[6], buf[7]};
+  sendKeyCodesBySerial(modifier, keycodes);
 }
 
 USB usb;
