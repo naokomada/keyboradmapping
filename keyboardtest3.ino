@@ -59,6 +59,9 @@ void sendKeyCodesBySerial(uint8_t modifiers,
   if (keycodes[0] == 138 || keycodes[1] == 138 || keycodes[2] == 138 || keycodes[3] == 138 || keycodes[4] == 138 || keycodes[5] == 138) {
     modifiers = 2;
   }
+  if (keycodes[0] == 139 || keycodes[1] == 139 || keycodes[2] == 139 || keycodes[3] == 139 || keycodes[4] == 139 || keycodes[5] == 139) {
+    modifiers = 1;
+  }
 
   // 修飾キーの入力
   pressModifiers(modifiers);
@@ -117,7 +120,7 @@ void pressNormalKey(uint8_t keycode) {
     Keyboard.press('`');
   }
   // 138は変換キーをSHIFTにしたため
-  else if (keycode == 0 || keycode == 138) {
+  else if (keycode == 0 || keycode == 138 || keycode == 139) {
   }
   else {
     Keyboard.press(charMapArray[keycode]);
