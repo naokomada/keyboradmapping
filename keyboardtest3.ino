@@ -50,31 +50,30 @@ void sendKeyCodesBySerial(uint8_t modifiers,
   if (keycodes[0] == 0 && keycodes[1] == 0 && keycodes[2] == 0 && keycodes[3] == 0 && keycodes[4] == 0 && keycodes[5] == 0) {
     initCacheArray();
     Keyboard.releaseAll();
-    delay(5);
+    //delay(5);
     return;
   }
 
-  for (int i = 0; i < 6; i++) {
-    // キャッシュがあったら入力をさせない
-    if (isKeyCached(keycodes[i])) keycodes[i] = 0;
-    // 入力されたキー情報はキャッシュしておく
-    keyCache[keycodes[i]] = true;
-  }
 
+  // 変換キーをSHIFTにする
   if (keycodes[0] == 138 || keycodes[1] == 138 || keycodes[2] == 138 || keycodes[3] == 138 || keycodes[4] == 138 || keycodes[5] == 138) {
-    Serial.print("modifiers change"); // modifier keys
     modifiers = 2;
   }
 
   // 修飾キーの入力
   pressModifiers(modifiers);
+
   // 実際のキー入力
   for (int i = 0; i < 6; i++) {
-    mapKeycodeToString(keycodes[i]);
+    // キャッシュがあったら入力をさせない
+    if (isKeyCached(keycodes[i])) keycodes[i] = 0;
+    // 入力されたキー情報はキャッシュしておく
+    keyCache[keycodes[i]] = true;
+    pressNormalKey(keycodes[i]);
   }
 
   Keyboard.releaseAll();
-  delay(5);
+  //delay(5);
 }
 
 void pressModifiers(uint8_t modifiers) {
@@ -92,7 +91,7 @@ void pressModifiers(uint8_t modifiers) {
   }
 }
 
-void mapKeycodeToString(uint8_t keycode) {
+void pressNormalKey(uint8_t keycode) {
 
   char charMapArray[] = {
     'N', 'N', 'N', 'N', 'a', 'b', 'c', 'd', 'e', 'f',
@@ -117,6 +116,7 @@ void mapKeycodeToString(uint8_t keycode) {
     Keyboard.press(KEY_LEFT_ALT);
     Keyboard.press('`');
   }
+  // 138は変換キーをSHIFTにしたため
   else if (keycode == 0 || keycode == 138) {
   }
   else {
