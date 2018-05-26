@@ -25,15 +25,12 @@ void outputCacheArray() {
 
 // キー送信のメイン処理
 void sendKeyCodesBySerial(uint8_t modifiers,
-                          uint8_t *keycodes)
+                          uint8_t *keycodes,
+                          bool isKeyRepeat)
 {
   //  Keyboard.print(0xFD); // Raw Report Mode
   //  Keyboard.print(0x09); // Length
   //  Keyboard.print(0x01); // Descriptor 0x01=Keyboard
-  //
-  //  /* send key codes(8 bytes all) */
-  //  Keyboard.print(0x00, 1);   // reserved
-
 
   // デバッグ出力用
   //outputCacheArray();
@@ -43,11 +40,19 @@ void sendKeyCodesBySerial(uint8_t modifiers,
     Serial.print("keycode:");
     Serial.println(keycodes[i]);
   }
+  Serial.print("isKeyRepeat:");
+  Serial.println(isKeyRepeat);
   Serial.println("");  // keycode
 
 
-  // すべてのキーが離されたらキャッシュクリア
-  if (keycodes[0] == 0 && keycodes[1] == 0 && keycodes[2] == 0 && keycodes[3] == 0 && keycodes[4] == 0 && keycodes[5] == 0) {
+  // 修飾キー以外すべてのキーが離されたらキャッシュクリア
+
+  if ((keycodes[0] == 0 || keycodes[0] == 138 || keycodes[0] == 139)
+      && (keycodes[1] == 0 || keycodes[1] == 138 || keycodes[1] == 139)
+      && (keycodes[2] == 0 || keycodes[2] == 138 || keycodes[2] == 139)
+      && (keycodes[3] == 0 || keycodes[3] == 138 || keycodes[3] == 139)
+      && (keycodes[4] == 0 || keycodes[4] == 138 || keycodes[4] == 139)
+      && (keycodes[5] == 0 || keycodes[5] == 138 || keycodes[5] == 139)) {
     initCacheArray();
     Keyboard.releaseAll();
     //delay(5);
@@ -59,6 +64,7 @@ void sendKeyCodesBySerial(uint8_t modifiers,
   if (keycodes[0] == 138 || keycodes[1] == 138 || keycodes[2] == 138 || keycodes[3] == 138 || keycodes[4] == 138 || keycodes[5] == 138) {
     modifiers = 2;
   }
+  // 無変換キーをCtrlにする
   if (keycodes[0] == 139 || keycodes[1] == 139 || keycodes[2] == 139 || keycodes[3] == 139 || keycodes[4] == 139 || keycodes[5] == 139) {
     modifiers = 1;
   }
@@ -68,8 +74,12 @@ void sendKeyCodesBySerial(uint8_t modifiers,
 
   // 実際のキー入力
   for (int i = 0; i < 6; i++) {
+    // 修飾キー扱いのキーはキャッシュ対象外にする
+    if (keycodes[i] == 138 || keycodes[i] == 139) continue;
+
     // キャッシュがあったら入力をさせない
     if (isKeyCached(keycodes[i])) keycodes[i] = 0;
+
     // 入力されたキー情報はキャッシュしておく
     keyCache[keycodes[i]] = true;
     pressNormalKey(keycodes[i]);
@@ -137,7 +147,9 @@ class HIDKeyboardParser : public KeyboardReportParser
 void HIDKeyboardParser::Parse(USBHID *hid, bool is_rpt_id, uint8_t len, uint8_t *buf) {
   uint8_t modifier = buf[0];
   uint8_t keycodes[6] = {buf[2], buf[3], buf[4], buf[5], buf[6], buf[7]};
-  sendKeyCodesBySerial(modifier, keycodes);
+  sendKeyCodesBySerial(modifier, keycodes, is_rpt_id);
+  Serial.print("isKeyRepeat:");
+  Serial.println(is_rpt_id);
 }
 
 USB usb;
