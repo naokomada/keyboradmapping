@@ -128,6 +128,7 @@ void pressNormalKey(uint8_t keycode) {
   if (keycode == 136) {
     Keyboard.press(KEY_LEFT_ALT);
     Keyboard.press('`');
+    Keyboard.releaseAll();
   }
   // 138は変換キーをSHIFTにしたため
   else if (keycode == 0 || keycode == 138 || keycode == 139) {
